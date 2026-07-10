@@ -1,0 +1,17 @@
+# HTTPS automatique (Let's Encrypt) si DNS + ports 80/443 ouverts.
+
+{
+	email {$CADDY_ACME_EMAIL}
+}
+
+{$CADDY_DOMAIN} {
+	handle /api/* {
+		reverse_proxy api:8080
+	}
+	handle /uploads/* {
+		reverse_proxy api:8080
+	}
+	handle {
+		reverse_proxy web:80
+	}
+}

@@ -1,0 +1,55 @@
+# DÉVELOPPEMENT UNIQUEMENT — ne pas fusionner avec docker-compose.prod.yml
+# Usage : docker compose -f docker-compose.yml up --build
+# Ou : ./scripts/docker-dev.sh
+# Prérequis : ./scripts/setup-env.sh (backend/.env)
+
+services:
+  api:
+    build:
+      context: ./backend
+      target: dev
+    container_name: dog-api
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - dog-data-dev:/app/data
+      - dog-uploads-dev:/app/uploads
+    env_file:
+      - backend/.env
+    environment:
+      DATA_DIR: /app/data
+      UPLOADS_DIR: /app/uploads
+      CORS_ORIGIN: http://localhost:5173
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  web:
+    build:
+      context: ./frontend
+      target: dev
+    container_name: dog-web
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      VITE_API_URL: /api
+      VITE_SITE_URL: http://localhost:5173
+      VITE_PROXY_TARGET: http://api:8080
+    depends_on:
+      - api
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  dog-data-dev:
+  dog-uploads-dev:

@@ -1,0 +1,95 @@
+# PRODUCTION UNIQUEMENT — ne pas fusionner avec docker-compose.yml
+# Usage : docker compose -f docker-compose.prod.yml up -d --build
+# Ou : ./scripts/docker-prod.sh
+# Prérequis : .env (VITE_*, CADDY_*), backend/.env
+
+services:
+  api:
+    build:
+      context: ./backend
+      target: prod
+    container_name: dog-api
+    env_file:
+      - backend/.env
+    environment:
+      DATA_DIR: /app/data
+      UPLOADS_DIR: /app/uploads
+      CORS_ORIGIN: ${VITE_SITE_URL:?définir VITE_SITE_URL dans .env}
+    expose:
+      - "8080"
+    restart: always
+    volumes:
+      - dog-data:/app/data
+      - dog-uploads:/app/uploads
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/api/health >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - caddy_net
+
+  web:
+    build:
+      context: ./frontend
+      target: prod
+      args:
+        VITE_API_URL: ${VITE_API_URL:?définir VITE_API_URL dans .env}
+        VITE_SITE_URL: ${VITE_SITE_URL:?définir VITE_SITE_URL dans .env}
+    container_name: dog-web
+    expose:
+      - "80"
+    restart: always
+    depends_on:
+      api:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - caddy_net
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: dog-caddy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      CADDY_DOMAIN: ${CADDY_DOMAIN:?définir CADDY_DOMAIN dans .env}
+      CADDY_ACME_EMAIL: ${CADDY_ACME_EMAIL:-}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - dog-caddy-data:/data
+      - dog-caddy-config:/config
+    depends_on:
+      - web
+      - api
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - caddy_net
+
+networks:
+  caddy_net:
+    name: dog_caddy_net
+    driver: bridge
+
+volumes:
+  dog-data:
+  dog-uploads:
+  dog-caddy-data:
+  dog-caddy-config:

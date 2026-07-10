@@ -1,0 +1,398 @@
+<script setup lang="ts">
+import { computed, onMounted, reactive, ref } from 'vue'
+import { api, setAuthToken } from '@/api/client'
+import { useContent } from '@/composables/useContent'
+import type { SiteContent } from '@/types/content'
+
+const { content, fetchContent, setContent } = useContent()
+
+const token = ref<string | null>(
+  typeof localStorage !== 'undefined' ? localStorage.getItem('dog_admin_token') : null,
+)
+const loginForm = reactive({ username: '', password: '' })
+const loginError = ref('')
+const saving = ref(false)
+const saveMessage = ref('')
+const passwordForm = reactive({ currentPassword: '', newPassword: '' })
+
+const draft = ref<SiteContent | null>(null)
+
+const isLoggedIn = computed(() => Boolean(token.value))
+
+onMounted(async () => {
+  await fetchContent()
+  if (content.value) {
+    draft.value = JSON.parse(JSON.stringify(content.value)) as SiteContent
+  }
+  if (token.value) setAuthToken(token.value)
+})
+
+async function login() {
+  loginError.value = ''
+  try {
+    const { data } = await api.post<{ token: string }>('/admin/login', loginForm)
+    token.value = data.token
+    localStorage.setItem('dog_admin_token', data.token)
+    setAuthToken(data.token)
+    loginForm.password = ''
+  } catch {
+    loginError.value = 'Identifiants incorrects'
+  }
+}
+
+function logout() {
+  token.value = null
+  localStorage.removeItem('dog_admin_token')
+  setAuthToken(null)
+}
+
+async function save() {
+  if (!draft.value) return
+  saving.value = true
+  saveMessage.value = ''
+  try {
+    await api.put('/admin/content', draft.value)
+    setContent(draft.value)
+    saveMessage.value = 'Contenu enregistré.'
+  } catch {
+    saveMessage.value = 'Erreur lors de la sauvegarde.'
+  } finally {
+    saving.value = false
+  }
+}
+
+async function uploadImage(event: Event, target: 'hero' | 'about') {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file || !draft.value || !token.value) return
+
+  const form = new FormData()
+  form.append('file', file)
+  try {
+    const { data } = await api.post<{ url: string }>('/admin/upload', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    if (target === 'hero') draft.value.sections.hero.image = data.url
+    else draft.value.sections.about.image = data.url
+  } catch {
+    saveMessage.value = "Erreur lors de l'upload."
+  }
+}
+
+async function changePassword() {
+  try {
+    await api.put('/admin/password', passwordForm)
+    passwordForm.currentPassword = ''
+    passwordForm.newPassword = ''
+    saveMessage.value = 'Mot de passe mis à jour.'
+  } catch {
+    saveMessage.value = 'Mot de passe actuel incorrect.'
+  }
+}
+
+function addService() {
+  if (!draft.value) return
+  draft.value.sections.services.push({
+    title: 'Nouveau service',
+    description: '',
+    icon: 'build',
+  })
+}
+
+function removeService(index: number) {
+  draft.value?.sections.services.splice(index, 1)
+}
+</script>
+
+<template>
+  <div class="min-h-screen bg-surface">
+    <header class="border-b border-border bg-surface-elevated px-6 py-4">
+      <div class="mx-auto flex max-w-container items-center justify-between">
+        <h1 class="font-display text-xl font-bold text-primary">Admin — Dog Informatique</h1>
+        <a class="text-sm text-primary hover:underline" href="/">← Retour au site</a>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-container px-6 py-10">
+      <section v-if="!isLoggedIn" class="mx-auto max-w-md rounded-xl border border-border bg-surface-elevated p-8">
+        <h2 class="mb-6 font-display text-2xl font-semibold">Connexion</h2>
+        <form class="space-y-4" @submit.prevent="login">
+          <div>
+            <label class="mb-1 block text-sm font-medium">Identifiant</label>
+            <input
+              v-model="loginForm.username"
+              class="w-full rounded-lg border border-border px-3 py-2"
+              type="text"
+              required
+            />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium">Mot de passe</label>
+            <input
+              v-model="loginForm.password"
+              class="w-full rounded-lg border border-border px-3 py-2"
+              type="password"
+              required
+            />
+          </div>
+          <p v-if="loginError" class="text-sm text-red-600">{{ loginError }}</p>
+          <button
+            class="w-full rounded-lg bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-dark"
+            type="submit"
+          >
+            Se connecter
+          </button>
+        </form>
+      </section>
+
+      <section v-else-if="draft" class="space-y-10">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <p v-if="saveMessage" class="text-sm text-secondary-dark">{{ saveMessage }}</p>
+          <div class="flex gap-3">
+            <button
+              class="rounded-lg border border-border px-4 py-2 text-sm hover:bg-surface"
+              type="button"
+              @click="logout"
+            >
+              Déconnexion
+            </button>
+            <button
+              class="rounded-lg bg-secondary px-4 py-2 text-sm font-semibold text-white hover:bg-secondary-dark disabled:opacity-50"
+              type="button"
+              :disabled="saving"
+              @click="save"
+            >
+              {{ saving ? 'Enregistrement…' : 'Enregistrer' }}
+            </button>
+          </div>
+        </div>
+
+        <fieldset class="rounded-xl border border-border bg-surface-elevated p-6">
+          <legend class="px-2 font-display text-lg font-semibold">SEO</legend>
+          <div class="mt-4 grid gap-4 md:grid-cols-2">
+            <label class="block text-sm">
+              Titre
+              <input v-model="draft.seo.title" class="mt-1 w-full rounded-lg border border-border px-3 py-2" />
+            </label>
+            <label class="block text-sm">
+              Mots-clés
+              <input v-model="draft.seo.keywords" class="mt-1 w-full rounded-lg border border-border px-3 py-2" />
+            </label>
+            <label class="col-span-full block text-sm">
+              Description
+              <textarea
+                v-model="draft.seo.description"
+                class="mt-1 w-full rounded-lg border border-border px-3 py-2"
+                rows="2"
+              />
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset class="rounded-xl border border-border bg-surface-elevated p-6">
+          <legend class="px-2 font-display text-lg font-semibold">Coordonnées</legend>
+          <div class="mt-4 grid gap-4 md:grid-cols-2">
+            <label class="block text-sm">
+              Nom
+              <input v-model="draft.business.name" class="mt-1 w-full rounded-lg border border-border px-3 py-2" />
+            </label>
+            <label class="block text-sm">
+              Téléphone
+              <input v-model="draft.business.phone" class="mt-1 w-full rounded-lg border border-border px-3 py-2" />
+            </label>
+            <label class="block text-sm">
+              Email
+              <input v-model="draft.business.email" class="mt-1 w-full rounded-lg border border-border px-3 py-2" />
+            </label>
+            <label class="block text-sm">
+              Ville
+              <input v-model="draft.business.city" class="mt-1 w-full rounded-lg border border-border px-3 py-2" />
+            </label>
+            <label class="col-span-full block text-sm">
+              Adresse
+              <input v-model="draft.business.address" class="mt-1 w-full rounded-lg border border-border px-3 py-2" />
+            </label>
+            <label class="col-span-full block text-sm">
+              Horaires
+              <input v-model="draft.business.hours" class="mt-1 w-full rounded-lg border border-border px-3 py-2" />
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset class="rounded-xl border border-border bg-surface-elevated p-6">
+          <legend class="px-2 font-display text-lg font-semibold">Hero</legend>
+          <div class="mt-4 space-y-4">
+            <label class="block text-sm">
+              Badge
+              <input v-model="draft.sections.hero.badge" class="mt-1 w-full rounded-lg border border-border px-3 py-2" />
+            </label>
+            <label class="block text-sm">
+              Titre (partie 1)
+              <input v-model="draft.sections.hero.title" class="mt-1 w-full rounded-lg border border-border px-3 py-2" />
+            </label>
+            <label class="block text-sm">
+              Accent titre
+              <input v-model="draft.sections.hero.titleAccent" class="mt-1 w-full rounded-lg border border-border px-3 py-2" />
+            </label>
+            <label class="block text-sm">
+              Sous-titre
+              <textarea
+                v-model="draft.sections.hero.subtitle"
+                class="mt-1 w-full rounded-lg border border-border px-3 py-2"
+                rows="2"
+              />
+            </label>
+            <label class="block text-sm">
+              CTA principal
+              <input
+                v-model="draft.sections.hero.ctaLabel"
+                class="mt-1 w-full rounded-lg border border-border px-3 py-2"
+              />
+            </label>
+            <label class="block text-sm">
+              CTA secondaire
+              <input
+                v-model="draft.sections.hero.secondaryCtaLabel"
+                class="mt-1 w-full rounded-lg border border-border px-3 py-2"
+              />
+            </label>
+            <label class="block text-sm">
+              Tag image
+              <input v-model="draft.sections.hero.imageTag" class="mt-1 w-full rounded-lg border border-border px-3 py-2" />
+            </label>
+            <label class="block text-sm">
+              Image
+              <input type="file" accept="image/*" class="mt-1 block" @change="uploadImage($event, 'hero')" />
+              <span v-if="draft.sections.hero.image" class="text-xs text-muted">{{ draft.sections.hero.image }}</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset class="rounded-xl border border-border bg-surface-elevated p-6">
+          <legend class="px-2 font-display text-lg font-semibold">Services</legend>
+          <div class="mt-4 space-y-6">
+            <div
+              v-for="(service, index) in draft.sections.services"
+              :key="index"
+              class="rounded-lg border border-border p-4"
+            >
+              <div class="mb-3 flex justify-between">
+                <span class="text-sm font-medium">Service {{ index + 1 }}</span>
+                <button class="text-sm text-red-600" type="button" @click="removeService(index)">Supprimer</button>
+              </div>
+              <div class="grid gap-3 md:grid-cols-2">
+                <input v-model="service.title" class="rounded-lg border border-border px-3 py-2" placeholder="Titre" />
+                <input v-model="service.icon" class="rounded-lg border border-border px-3 py-2" placeholder="Icône" />
+                <textarea
+                  v-model="service.description"
+                  class="col-span-full rounded-lg border border-border px-3 py-2"
+                  rows="2"
+                  placeholder="Description"
+                />
+              </div>
+            </div>
+            <button class="text-sm text-primary hover:underline" type="button" @click="addService">
+              + Ajouter un service
+            </button>
+          </div>
+        </fieldset>
+
+        <fieldset class="rounded-xl border border-border bg-surface-elevated p-6">
+          <legend class="px-2 font-display text-lg font-semibold">À propos</legend>
+          <div class="mt-4 space-y-4">
+            <input v-model="draft.sections.about.title" class="w-full rounded-lg border border-border px-3 py-2" />
+            <textarea
+              v-model="draft.sections.about.body"
+              class="w-full rounded-lg border border-border px-3 py-2"
+              rows="4"
+            />
+            <label class="block text-sm">
+              Image
+              <input type="file" accept="image/*" class="mt-1 block" @change="uploadImage($event, 'about')" />
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset class="rounded-xl border border-border bg-surface-elevated p-6">
+          <legend class="px-2 font-display text-lg font-semibold">Portfolio</legend>
+          <div class="mt-4 space-y-6">
+            <div
+              v-for="(item, index) in draft.sections.portfolio"
+              :key="index"
+              class="rounded-lg border border-border p-4"
+            >
+              <input v-model="item.title" class="mb-2 w-full rounded-lg border border-border px-3 py-2" placeholder="Titre" />
+              <textarea
+                v-model="item.description"
+                class="mb-2 w-full rounded-lg border border-border px-3 py-2"
+                rows="2"
+                placeholder="Description"
+              />
+              <input v-model="item.image" class="mb-2 w-full rounded-lg border border-border px-3 py-2" placeholder="URL image" />
+              <input v-model="item.tag" class="mb-2 w-full rounded-lg border border-border px-3 py-2" placeholder="Tag" />
+              <input v-model="item.badge" class="mb-2 w-full rounded-lg border border-border px-3 py-2" placeholder="Badge" />
+              <select v-model="item.badgeStyle" class="mb-2 w-full rounded-lg border border-border px-3 py-2">
+                <option value="premium">premium</option>
+                <option value="fixed">fixed</option>
+                <option value="pro">pro</option>
+              </select>
+              <input v-model="item.buttonLabel" class="w-full rounded-lg border border-border px-3 py-2" placeholder="Bouton" />
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="rounded-xl border border-border bg-surface-elevated p-6">
+          <legend class="px-2 font-display text-lg font-semibold">Social</legend>
+          <div class="mt-4 grid gap-4 md:grid-cols-2">
+            <input v-model="draft.sections.social.title" class="rounded-lg border border-border px-3 py-2" placeholder="Titre" />
+            <input v-model="draft.sections.social.youtubeUrl" class="rounded-lg border border-border px-3 py-2" placeholder="YouTube URL" />
+            <input v-model="draft.sections.social.tiktokUrl" class="rounded-lg border border-border px-3 py-2" placeholder="TikTok URL" />
+            <textarea
+              v-model="draft.sections.social.subtitle"
+              class="col-span-full rounded-lg border border-border px-3 py-2"
+              rows="2"
+              placeholder="Sous-titre"
+            />
+          </div>
+        </fieldset>
+
+        <fieldset class="rounded-xl border border-border bg-surface-elevated p-6">
+          <legend class="px-2 font-display text-lg font-semibold">Newsletter</legend>
+          <textarea
+            v-model="draft.sections.contact.intro"
+            class="mt-4 w-full rounded-lg border border-border px-3 py-2"
+            rows="2"
+            placeholder="Intro"
+          />
+        </fieldset>
+
+        <fieldset class="rounded-xl border border-border bg-surface-elevated p-6">
+          <legend class="px-2 font-display text-lg font-semibold">Changer le mot de passe</legend>
+          <form class="mt-4 grid gap-4 md:grid-cols-2" @submit.prevent="changePassword">
+            <input
+              v-model="passwordForm.currentPassword"
+              class="rounded-lg border border-border px-3 py-2"
+              type="password"
+              placeholder="Mot de passe actuel"
+              required
+            />
+            <input
+              v-model="passwordForm.newPassword"
+              class="rounded-lg border border-border px-3 py-2"
+              type="password"
+              placeholder="Nouveau mot de passe (8+ car.)"
+              minlength="8"
+              required
+            />
+            <button
+              class="rounded-lg border border-primary px-4 py-2 text-sm text-primary hover:bg-primary/5 md:col-span-2 md:w-fit"
+              type="submit"
+            >
+              Mettre à jour
+            </button>
+          </form>
+        </fieldset>
+      </section>
+    </main>
+  </div>
+</template>
