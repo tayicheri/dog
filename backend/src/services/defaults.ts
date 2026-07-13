@@ -25,8 +25,7 @@ export function defaultSiteContent(): SiteContent {
           "Conception de setups gaming extrêmes, watercooling custom et réparation hardware de précision. Donnez à votre machine le soin qu'elle mérite avec l'expertise D.O.G.",
         ctaLabel: 'NOS PRESTATIONS',
         secondaryCtaLabel: 'VOIR LE PORTFOLIO',
-        image:
-          'https://lh3.googleusercontent.com/aida-public/AB6AXuDShfwN8z5YQJQv9gHjBzkcB63QyxGAMkcuzN0hQAaNZ9Z9l43EhiE_NbbzRu2kmbHp6Y_m_ji4iY65gHRcsJjp9q1iTqvv4SRGbJPNWuz4JQwX8FYt3f5UBupE4zIPWk44Nj0vckCPqeB_KSTqJoGLbWICyB_tB-oF5vswYwJYfY--CuC0TGxDHmgHThfParbACeQnHpadVqjBUQzSaMIVHxqOUJk_USR0wzAVGkU9GsIFy13wsf8vza5Iccp-rk3XpWyky8c0leGW',
+        image: '/uploads/hero.jpg',
         imageTag: '[BUILD-ALPHA-01]',
       },
       services: [
@@ -68,8 +67,7 @@ export function defaultSiteContent(): SiteContent {
           title: 'Setup Full RGB',
           description:
             "Optimisation complète de l'écosystème lumineux et câblage discret pour un rendu studio.",
-          image:
-            'https://lh3.googleusercontent.com/aida-public/AB6AXuBh9cPElnTmvty1ykclCwt7xunm02X8Cq-2iJ6RYPWOisgLRk3D9nozPMhyd5_krWJ4wIznM3rH7159VB5EjlKVDrJ1K7RToW7kbWUUcoNeplb9vGUIvthLgK-sIiSf6WtOFUtXzagJeqmIDKEhO8clV0kRWSXE_EOEepvOydvz5fm1ImffXqhqg49n94EF1Y7GqBtSp6PLGKcSkuvpQTVOC8ry4z39sLV0Wo204Xe0CRsfb5CoIeXUBR4SAuFHS2Us55MuGwbnIQO5',
+          image: '/uploads/portfolio-01.jpg',
           tag: '[RGB-MASTER]',
           badge: 'PREMIUM',
           badgeStyle: 'premium',
@@ -79,8 +77,7 @@ export function defaultSiteContent(): SiteContent {
           title: 'Réparation GPU',
           description:
             "Sauvetage d'une RTX 3080 Ti après un court-circuit. Micro-soudure et repad thermique intégral.",
-          image:
-            'https://lh3.googleusercontent.com/aida-public/AB6AXuCvGZMbpzP-dGP0DgVlVHtOvBEdK5jBuIxk3obNY22rf1Wfzt51ycRji1IC8n4rP4jeULpFnNohLt02NPSBfuSGPvOpvE7PHHBnHrlCF8snwdnU5ippR5I67cwHsXkxSjGTBh0m35AFIyEryQQtjck36QSu2Rcn-svernxKZsPjovCjrWyoxGGaWfvgbZaaIA8A4XzZ6TOsKTRC1lXAn2RAF4ZH7UeSmA16XLIn6PVRZvoKU8HQS68rRc8FlYV9sQ-TN6040heYNxYS',
+          image: '/uploads/portfolio-02.jpg',
           tag: '[GPU-FIX-09]',
           badge: 'FIXED',
           badgeStyle: 'fixed',
@@ -90,8 +87,7 @@ export function defaultSiteContent(): SiteContent {
           title: 'Optimisation Streamer',
           description:
             'Configuration dual-PC, optimisation OBS et réglages audio pour une qualité 4K sans perte.',
-          image:
-            'https://lh3.googleusercontent.com/aida-public/AB6AXuBj_8j05TEU9S4ZWFthrVPeH7Xlh1RR4K1ZdaYmu9r9dmERW_7RwIiXOvnR3E1lU71VNXBwv3SaedXTjhrtByat3YudJUDSwy6IRELRff7r4RL94U0k8PYVTJylvULvMmW64tNFP7pv-aHX8yEMfsOYhcjTz0rm_4xG58N9RgpIIrIKBgLuvk7ux3-DhQtvB0BSnx5rArUO5jNECKqX_hbv_McAw2oGK1rxYqeJ3sN2rrC4CnbZjkYCwgXVZI2R7sUCnLieCllKYrvx',
+          image: '/uploads/portfolio-03.jpg',
           tag: '[STREAM-OPT]',
           badge: 'PRO-GEAR',
           badgeStyle: 'pro',
@@ -104,6 +100,8 @@ export function defaultSiteContent(): SiteContent {
           'Tutos, déballages hardware et timelapse de montages extrêmes. Rejoignez la meute sur nos réseaux.',
         youtubeUrl: 'https://youtube.com',
         tiktokUrl: 'https://tiktok.com',
+        youtubeImage: '/uploads/social-youtube.jpg',
+        tiktokImage: '/uploads/social-tiktok.jpg',
       },
     },
   }

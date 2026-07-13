@@ -5,11 +5,12 @@ import { useContent } from '@/composables/useContent'
 const { content } = useContent()
 const social = computed(() => content.value?.sections.social)
 
-const youtubeImage =
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuCEOEzCMF2uBMwD8o1VVh7JZu-lRf3upqMnZQk35f90KeQuzcfuFbMVWd05rDcRO5TgcHT3nKsvVoJEAAaHEVS1tYGPOz14BVXlyAxqiC8ZFj5qKbwsKWJWBiFMOCSHSaK8RT3wFjvNP9E6OdXkuEZQRsqo4NdviFYzLAGS11wJxRJAIYz9C1n_bykQeUou4ljTurL2ORw9EJs97LpC4wdWm1p-mMXWFsNNDWQ3IqOiHwAfZYyCPNPRwpKo0yZMw1tZoJGxHSNXBqnk'
-
-const tiktokImage =
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuDMiTUmDwrO1lbdbCVPQDteHKKZ1xh-Yg5jB6dqWEOlZ2d-HnW2BCGSqPWjlFUKLhoFAYoOvIQlTcJlQs69NxbtaxBYtOMHMAA4-ERfT0OoPWoqicCF2IPYGCuNSMqLYLqpsFxciDrMaah384PC7ZWTWkRs2lU7h2tEd7uH1WtvXKPn2XsDQokPAusREVhgraz_CvncqNgVay9LArVAt3rkwfVfNDaQlJeJVt0I4iDEdy1JQqpgnfjq4EbZG0o20iYx1oi3W28a3ToX'
+const youtubeImage = computed(
+  () => social.value?.youtubeImage || '/uploads/social-youtube.jpg',
+)
+const tiktokImage = computed(
+  () => social.value?.tiktokImage || '/uploads/social-tiktok.jpg',
+)
 </script>
 
 <template>

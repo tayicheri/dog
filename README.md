@@ -228,3 +228,14 @@ Le design source provient de Google Stitch (projet **dog**). Voir `DESIGN.md`.
 ```bash
 node scripts/fetch-stitch.mjs
 ```
+
+### Images locales
+
+Les images Stitch/Google sont stockées localement dans `backend/assets/images/` (versionnées) et servies via `/uploads/`.
+
+```bash
+# Télécharger / rafraîchir les images depuis les URLs externes
+node scripts/mirror-external-images.mjs --patch-site-json
+```
+
+Au démarrage de l'API, les fichiers manquants sont copiés vers `uploads/` et `site.json` est migré automatiquement (URLs externes → `/uploads/...`).

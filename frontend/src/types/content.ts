@@ -56,6 +56,8 @@ export interface SocialSection {
   subtitle: string
   youtubeUrl: string
   tiktokUrl: string
+  youtubeImage?: string
+  tiktokImage?: string
 }
 
 export interface SiteContent {

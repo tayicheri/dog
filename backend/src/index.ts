@@ -7,8 +7,10 @@ import { adminRouter } from './routes/admin.js'
 import { contactRouter } from './routes/contact.js'
 import { contentRouter } from './routes/content.js'
 import { bootstrap } from './services/storage.js'
+import { syncLocalImages } from './services/localImages.js'
 
 await bootstrap()
+await syncLocalImages()
 
 const app = express()
 
