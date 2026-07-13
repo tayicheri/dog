@@ -6,7 +6,9 @@ import { useContactModal } from '@/composables/useContactModal'
 
 const { content } = useContent()
 const { openContact } = useContactModal()
-const businessName = computed(() => content.value?.business.name ?? brand.fullName)
+const business = computed(() => content.value?.business)
+const businessName = computed(() => business.value?.name ?? brand.fullName)
+const phoneHref = computed(() => business.value?.phone.replace(/\s/g, '') ?? '')
 const year = new Date().getFullYear()
 </script>
 
@@ -19,6 +21,30 @@ const year = new Date().getFullYear()
           Expertise technique, passion gaming. Nous repoussons les limites de votre matériel avec précision et
           performance.
         </p>
+        <address
+          v-if="business?.address || business?.city"
+          class="space-y-1 text-body-sm not-italic text-on-surface-variant"
+        >
+          <p v-if="business?.address">{{ business.address }}</p>
+          <p v-if="business?.city">{{ business.city }}</p>
+          <p v-if="business?.phone">
+            <a
+              class="transition-colors hover:text-primary-fixed-dim"
+              :href="`tel:${phoneHref}`"
+            >
+              {{ business.phone }}
+            </a>
+          </p>
+          <p v-if="business?.email">
+            <a
+              class="transition-colors hover:text-primary-fixed-dim"
+              :href="`mailto:${business.email}`"
+            >
+              {{ business.email }}
+            </a>
+          </p>
+          <p v-if="business?.hours">{{ business.hours }}</p>
+        </address>
       </div>
 
       <div class="space-y-4">
