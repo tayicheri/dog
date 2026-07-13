@@ -1,4 +1,5 @@
 import type { SiteContent } from '@/types/content'
+import { defaultLegalContent } from '@/config/defaultLegal'
 
 /** Contenu par défaut — aligné sur backend/src/services/defaults.ts */
 export function defaultSiteContent(): SiteContent {
@@ -105,5 +106,6 @@ export function defaultSiteContent(): SiteContent {
         tiktokImage: '/uploads/social-tiktok.jpg',
       },
     },
+    legal: defaultLegalContent(),
   }
 }

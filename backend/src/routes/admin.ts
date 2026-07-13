@@ -75,6 +75,10 @@ const siteContentSchema: z.ZodType<SiteContent> = z.object({
       tiktokUrl: z.string(),
     }),
   }),
+  legal: z.object({
+    terms: z.string(),
+    privacy: z.string(),
+  }),
 })
 
 const passwordSchema = z.object({

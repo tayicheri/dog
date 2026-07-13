@@ -69,10 +69,16 @@ export interface SiteSections {
   social: SocialSection
 }
 
+export interface SiteLegal {
+  terms: string
+  privacy: string
+}
+
 export interface SiteContent {
   seo: SiteSeo
   business: SiteBusiness
   sections: SiteSections
+  legal: SiteLegal
 }
 
 export interface AuthData {

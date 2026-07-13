@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { useHead } from '@unhead/vue'
 import { api, setAuthToken } from '@/api/client'
 import PortfolioItemModal from '@/components/admin/PortfolioItemModal.vue'
+import RichTextEditor from '@/components/admin/RichTextEditor.vue'
 import { useContent } from '@/composables/useContent'
 import type { PortfolioItem, SiteContent } from '@/types/content'
 
@@ -547,6 +548,41 @@ function removePortfolio(index: number) {
             rows="2"
             placeholder="Intro"
           />
+        </fieldset>
+
+        <fieldset class="rounded-xl border border-border bg-surface-elevated p-6">
+          <legend class="px-2 font-display text-lg font-semibold">Documents juridiques</legend>
+          <p class="mt-2 text-sm text-muted">
+            Textes types à faire valider par un professionnel avant mise en production définitive.
+            Prévisualisez sur le site après enregistrement.
+          </p>
+          <div class="mt-4 space-y-8">
+            <RichTextEditor
+              v-model="draft.legal.terms"
+              label="Conditions d'utilisation"
+              min-height="320px"
+            />
+            <div class="flex gap-4 text-sm">
+              <a class="text-primary hover:underline" href="/conditions-utilisation" target="_blank" rel="noopener noreferrer">
+                Aperçu CGU →
+              </a>
+            </div>
+            <RichTextEditor
+              v-model="draft.legal.privacy"
+              label="Politique de confidentialité"
+              min-height="320px"
+            />
+            <div class="flex gap-4 text-sm">
+              <a
+                class="text-primary hover:underline"
+                href="/politique-de-confidentialite"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Aperçu confidentialité →
+              </a>
+            </div>
+          </div>
         </fieldset>
 
         <fieldset class="rounded-xl border border-border bg-surface-elevated p-6">

@@ -60,6 +60,11 @@ export interface SocialSection {
   tiktokImage?: string
 }
 
+export interface SiteLegal {
+  terms: string
+  privacy: string
+}
+
 export interface SiteContent {
   seo: SiteSeo
   business: SiteBusiness
@@ -71,4 +76,5 @@ export interface SiteContent {
     portfolio: PortfolioItem[]
     social: SocialSection
   }
+  legal: SiteLegal
 }

@@ -2,8 +2,10 @@
 import { computed } from 'vue'
 import { brand } from '@/config/brand'
 import { useContent } from '@/composables/useContent'
+import { useContactModal } from '@/composables/useContactModal'
 
 const { content } = useContent()
+const { openContact } = useContactModal()
 const businessName = computed(() => content.value?.business.name ?? brand.fullName)
 const year = new Date().getFullYear()
 </script>
@@ -23,19 +25,29 @@ const year = new Date().getFullYear()
         <h5 class="text-label-caps font-bold text-secondary-fixed-dim">Légal &amp; assistance</h5>
         <ul class="space-y-2">
           <li>
-            <a class="text-body-sm text-on-surface-variant transition-colors hover:text-tertiary-fixed-dim" href="#" @click.prevent>
+            <RouterLink
+              class="text-body-sm text-on-surface-variant transition-colors hover:text-tertiary-fixed-dim"
+              to="/conditions-utilisation"
+            >
               Conditions d'utilisation
-            </a>
+            </RouterLink>
           </li>
           <li>
-            <a class="text-body-sm text-on-surface-variant transition-colors hover:text-tertiary-fixed-dim" href="#" @click.prevent>
+            <RouterLink
+              class="text-body-sm text-on-surface-variant transition-colors hover:text-tertiary-fixed-dim"
+              to="/politique-de-confidentialite"
+            >
               Politique de confidentialité
-            </a>
+            </RouterLink>
           </li>
           <li>
-            <a class="text-body-sm text-on-surface-variant transition-colors hover:text-tertiary-fixed-dim" href="#" @click.prevent>
+            <button
+              class="text-body-sm text-on-surface-variant transition-colors hover:text-tertiary-fixed-dim"
+              type="button"
+              @click="openContact"
+            >
               Support technique
-            </a>
+            </button>
           </li>
         </ul>
       </div>

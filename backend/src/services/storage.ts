@@ -58,6 +58,7 @@ export async function readSiteContent(): Promise<SiteContent> {
   return {
     seo: { ...defaults.seo, ...parsed.seo },
     business: { ...defaults.business, ...parsed.business },
+    legal: { ...defaults.legal, ...parsed.legal },
     sections: {
       hero: { ...defaults.sections.hero, ...sections.hero },
       services: Array.isArray(sections.services) ? sections.services : defaults.sections.services,

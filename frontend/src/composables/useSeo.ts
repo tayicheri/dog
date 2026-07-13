@@ -85,3 +85,41 @@ export function useSiteSeo(content: ContentRef) {
     }),
   )
 }
+
+type LegalTitleRef = Ref<string> | string
+type LegalPathRef = Ref<string> | string
+
+export function useLegalSeo(pageTitle: LegalTitleRef, pagePath: LegalPathRef) {
+  const title = computed(() => {
+    const label = typeof pageTitle === 'string' ? pageTitle : pageTitle.value
+    return `${label} | D.O.G. Dépann' Ordi Game`
+  })
+
+  const canonical = computed(() => {
+    const path = typeof pagePath === 'string' ? pagePath : pagePath.value
+    return `${siteUrl}${path}`
+  })
+
+  const description =
+    "Informations légales du site D.O.G. Dépann' Ordi Game — dépannage PC, montage gaming et réparation matérielle."
+
+  useHead({
+    htmlAttrs: { lang: 'fr' },
+    link: [{ rel: 'canonical', href: canonical }],
+  })
+
+  useSeoMeta({
+    title,
+    description,
+    ogTitle: title,
+    ogDescription: description,
+    ogType: 'website',
+    ogLocale: 'fr_FR',
+    ogUrl: canonical,
+    ogImage: ogImageUrl,
+    twitterCard: 'summary',
+    twitterTitle: title,
+    twitterDescription: description,
+    twitterImage: ogImageUrl,
+  })
+}

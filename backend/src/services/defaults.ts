@@ -1,4 +1,5 @@
 import type { SiteContent } from '../types.js'
+import { defaultLegalContent } from './defaultLegal.js'
 
 export function defaultSiteContent(): SiteContent {
   return {
@@ -104,5 +105,6 @@ export function defaultSiteContent(): SiteContent {
         tiktokImage: '/uploads/social-tiktok.jpg',
       },
     },
+    legal: defaultLegalContent(),
   }
 }

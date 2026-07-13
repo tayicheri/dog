@@ -71,6 +71,19 @@ Données et fichiers sur l'hôte :
 - `backend/data/` → `site.json`, `auth.json`, `smtp.json`
 - `backend/uploads/` → images uploadées
 
+### Schéma `site.json`
+
+Le fichier `backend/data/site.json` contient le contenu public du site. Blocs principaux :
+
+| Bloc | Description |
+|------|-------------|
+| `seo` | Titre, description, mots-clés |
+| `business` | Coordonnées (nom, téléphone, email, adresse, horaires) |
+| `sections` | Hero, services, à propos, contact, portfolio, réseaux sociaux |
+| `legal` | Documents juridiques en HTML : `terms` (CGU), `privacy` (politique de confidentialité) |
+
+Les pages `/conditions-utilisation` et `/politique-de-confidentialite` affichent `legal.terms` et `legal.privacy`. Édition via l'admin → section **Documents juridiques** (éditeur riche TipTap). Si le bloc `legal` est absent d'un ancien `site.json`, l'API injecte les valeurs par défaut au chargement.
+
 Compte admin par défaut (premier démarrage uniquement) : `admin` / `changeme` (depuis `backend/.env`).
 
 ### Option B — Docker dev
@@ -255,6 +268,7 @@ Ce script (appelé aussi par `setup-env.sh` et `docker-prod.sh`) :
 - Régénère `frontend/public/sitemap.xml` et `robots.txt` depuis `VITE_SITE_URL`
 - Génère `frontend/public/og-image.jpg` depuis `backend/assets/images/hero.jpg`
 - Exclut `/admin` du crawl (`robots.txt`)
+- Inclut les pages légales (`/conditions-utilisation`, `/politique-de-confidentialite`) dans le sitemap
 
 ### Métadonnées
 

@@ -2,7 +2,6 @@
 import { onMounted } from 'vue'
 import { useContent } from '@/composables/useContent'
 import { useSiteSeo } from '@/composables/useSeo'
-import ContactModal from '@/components/ContactModal.vue'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import HeroSection from '@/components/sections/HeroSection.vue'
@@ -30,5 +29,4 @@ onMounted(() => {
     <ContactSection />
   </main>
   <AppFooter />
-  <ContactModal />
 </template>
