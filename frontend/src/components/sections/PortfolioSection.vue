@@ -17,7 +17,7 @@ const badgeClasses: Record<PortfolioItem['badgeStyle'], string> = {
   <section id="portfolio" class="page-container py-24">
     <div class="mb-12 flex flex-col items-end justify-between gap-6 md:flex-row">
       <div>
-        <span class="text-label-caps tracking-widest text-secondary-fixed-dim">PORTFOLIO</span>
+        <span class="text-label-caps tracking-widest text-secondary-fixed-dim">RÉALISATIONS</span>
         <h2 class="text-display-lg-mobile mt-2 uppercase tracking-tight md:text-headline-md">
           Nos Réalisations
         </h2>
@@ -48,7 +48,8 @@ const badgeClasses: Record<PortfolioItem['badgeStyle'], string> = {
           <img
             :src="item.image"
             :alt="item.title"
-            class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+            decoding="async"
+            class="h-full w-full object-cover"
           />
           <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
           <div class="id-tag">{{ item.tag }}</div>

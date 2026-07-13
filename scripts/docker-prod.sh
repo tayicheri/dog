@@ -14,5 +14,6 @@ if [ ! -f .env ]; then
 fi
 
 ./scripts/render-caddy-snippet.sh
+./scripts/render-seo-files.sh
 
 exec docker compose -f docker-compose.prod.yml up -d --build "$@"

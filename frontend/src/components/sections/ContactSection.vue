@@ -16,7 +16,7 @@ async function submitNewsletter() {
     await api.post('/contact', {
       name: 'Newsletter',
       email: email.value,
-      message: 'Inscription newsletter Hardware Drop',
+      message: 'Inscription newsletter — alertes matériel',
     })
     status.value = 'ok'
     email.value = ''
@@ -34,10 +34,10 @@ async function submitNewsletter() {
       <div
         class="pointer-events-none absolute top-0 right-0 p-4 font-mono text-[80px] opacity-[0.03] select-none"
       >
-        READY_
+        PRÊT_
       </div>
       <h2 class="text-headline-md mb-6 md:text-display-lg-mobile">
-        Besoin d'un <span class="text-primary-fixed-dim">Boost</span> de Performance ?
+        Besoin d'un <span class="text-primary-fixed-dim">coup de boost</span> performance ?
       </h2>
       <p class="mx-auto mb-10 max-w-xl text-base text-on-surface-variant">{{ contact?.intro }}</p>
       <form class="mx-auto flex max-w-lg flex-col gap-4 md:flex-row" @submit.prevent="submitNewsletter">

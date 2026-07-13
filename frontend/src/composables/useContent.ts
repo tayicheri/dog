@@ -1,19 +1,21 @@
 import { computed, ref, readonly } from 'vue'
 import { api } from '@/api/client'
+import { defaultSiteContent } from '@/config/defaultContent'
 import type { SiteContent } from '@/types/content'
 
-const content = ref<SiteContent | null>(null)
+const content = ref<SiteContent>(defaultSiteContent())
 const loading = ref(false)
 const error = ref<string | null>(null)
 
 export function useContent() {
   async function fetchContent() {
-    if (content.value) return content.value
     loading.value = true
     error.value = null
     try {
       const { data } = await api.get<SiteContent>('/content')
-      content.value = data
+      if (JSON.stringify(data) !== JSON.stringify(content.value)) {
+        content.value = data
+      }
       return data
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Erreur de chargement'

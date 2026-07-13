@@ -90,6 +90,7 @@ sync_frontend_production_env
 
 if [ -f .env ]; then
   ./scripts/render-caddy-snippet.sh
+  ./scripts/render-seo-files.sh
 fi
 
 echo ""

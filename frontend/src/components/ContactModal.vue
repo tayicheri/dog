@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, onUnmounted, reactive, ref, watch } from 'vue'
 import { api } from '@/api/client'
 import { heroDefaultImage } from '@/config/brand'
 import { useContactModal } from '@/composables/useContactModal'
@@ -8,8 +8,8 @@ const { isOpen, closeContact } = useContactModal()
 
 const missionLabels: Record<string, string> = {
   reparation: 'Réparation Matérielle',
-  montage: 'Montage PC Custom',
-  optimisation: 'Optimisation logicielle / Tuning',
+  montage: 'Montage PC sur mesure',
+  optimisation: 'Optimisation logicielle / réglages fins',
   autre: 'Autre Requête',
 }
 
@@ -34,7 +34,14 @@ watch(isOpen, (open) => {
   if (open) {
     closing.value = false
     status.value = 'idle'
+    document.body.style.overflow = 'hidden'
+  } else {
+    document.body.style.overflow = ''
   }
+})
+
+onUnmounted(() => {
+  document.body.style.overflow = ''
 })
 
 function retry() {
@@ -144,13 +151,13 @@ async function submit() {
               </div>
               <div class="flex flex-col gap-2">
                 <label class="text-label-caps text-on-surface-variant" for="contact-email">
-                  Canal de Transmission (Email)
+                  Adresse e-mail
                 </label>
                 <input
                   id="contact-email"
                   v-model="form.email"
                   class="cyber-input focus:ring-0"
-                  placeholder="contact@matrix.com"
+                  placeholder="contact@exemple.fr"
                   type="email"
                   required
                 />
@@ -177,9 +184,9 @@ async function submit() {
                 class="cyber-input cursor-pointer appearance-none focus:ring-0"
               >
                 <option class="bg-surface text-on-surface" value="reparation">Réparation Matérielle</option>
-                <option class="bg-surface text-on-surface" value="montage">Montage PC Custom</option>
+                <option class="bg-surface text-on-surface" value="montage">Montage PC sur mesure</option>
                 <option class="bg-surface text-on-surface" value="optimisation">
-                  Optimisation logicielle / Tuning
+                  Optimisation logicielle / réglages fins
                 </option>
                 <option class="bg-surface text-on-surface" value="autre">Autre Requête</option>
               </select>
@@ -198,7 +205,7 @@ async function submit() {
                 id="contact-message"
                 v-model="form.message"
                 class="cyber-input resize-none focus:ring-0"
-                placeholder="Décrivez les symptômes de votre machine ou votre projet de build..."
+                placeholder="Décrivez les symptômes de votre machine ou votre projet de montage..."
                 rows="4"
                 required
                 minlength="10"

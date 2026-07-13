@@ -239,3 +239,42 @@ node scripts/mirror-external-images.mjs --patch-site-json
 ```
 
 Au démarrage de l'API, les fichiers manquants sont copiés vers `uploads/` et `site.json` est migré automatiquement (URLs externes → `/uploads/...`).
+
+---
+
+## SEO et référencement
+
+### Génération automatique (build / deploy)
+
+```bash
+./scripts/render-seo-files.sh
+```
+
+Ce script (appelé aussi par `setup-env.sh` et `docker-prod.sh`) :
+
+- Régénère `frontend/public/sitemap.xml` et `robots.txt` depuis `VITE_SITE_URL`
+- Génère `frontend/public/og-image.jpg` depuis `backend/assets/images/hero.jpg`
+- Exclut `/admin` du crawl (`robots.txt`)
+
+### Métadonnées
+
+- **Statiques** (fallback crawlable) : [`frontend/index.html`](frontend/index.html) — OG, Twitter, JSON-LD, canonical
+- **Dynamiques** (contenu admin) : [`frontend/src/composables/useSeo.ts`](frontend/src/composables/useSeo.ts) — title, description, keywords, Schema.org `LocalBusiness`
+- **`/admin`** : `noindex, nofollow` (meta + `Disallow` robots)
+
+### Checklist mise en production
+
+1. Vérifier `VITE_SITE_URL=https://dog.tayi.pro` dans `.env` racine
+2. Lancer `./scripts/render-seo-files.sh` puis `./scripts/docker-prod.sh`
+3. Vérifier :
+   ```bash
+   curl -sI https://dog.tayi.pro/og-image.jpg
+   curl -s https://dog.tayi.pro/robots.txt
+   grep -E 'og:image|LocalBusiness' frontend/dist/index.html
+   ```
+4. Soumettre `https://dog.tayi.pro/sitemap.xml` dans [Google Search Console](https://search.google.com/search-console)
+5. Valider le JSON-LD via [Rich Results Test](https://search.google.com/test/rich-results)
+6. Tester le partage sur un réseau social (preview avec image)
+7. Compléter la fiche **Google Business Profile** (adresse, téléphone, horaires réels dans l'admin)
+8. Personnaliser title / description / keywords dans `/admin` → section SEO → **Enregistrer**
+

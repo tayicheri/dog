@@ -38,8 +38,8 @@ const tiktokImage = computed(
             >
               <span class="material-symbols-outlined fill-current text-4xl text-white">play_arrow</span>
             </div>
-            <h3 class="text-headline-md mb-2 text-white">YouTube Hub</h3>
-            <p class="mb-6 text-on-surface-variant">Analyses poussées &amp; Benchmarks</p>
+            <h3 class="text-headline-md mb-2 text-white">Chaîne YouTube</h3>
+            <p class="mb-6 text-on-surface-variant">Analyses poussées &amp; tests de performance</p>
             <span class="rounded-full bg-red-600 px-8 py-3 font-bold text-white transition-all hover:bg-red-500">
               S'ABONNER AU DOG
             </span>
@@ -60,8 +60,8 @@ const tiktokImage = computed(
             >
               <span class="material-symbols-outlined text-4xl text-black">bolt</span>
             </div>
-            <h3 class="text-headline-md mb-2 text-white">TikTok Shorts</h3>
-            <p class="mb-6 text-on-surface-variant">Réparations flash &amp; Setups minute</p>
+            <h3 class="text-headline-md mb-2 text-white">Shorts TikTok</h3>
+            <p class="mb-6 text-on-surface-variant">Réparations flash &amp; montages express</p>
             <span class="rounded-full bg-cyan-400 px-8 py-3 font-bold text-black transition-all hover:bg-cyan-300">
               VOIR LES SHORTS
             </span>

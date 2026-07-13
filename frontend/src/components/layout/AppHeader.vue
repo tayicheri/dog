@@ -7,7 +7,7 @@ const { openContact } = useContactModal()
 
 <template>
   <header
-    class="fixed top-0 z-50 w-full border-b border-outline-variant/30 bg-background/80 shadow-[0_0_20px_rgba(0,219,233,0.15)] backdrop-blur-xl"
+    class="fixed top-0 z-50 w-full border-b border-outline-variant/30 bg-background/95 shadow-[0_0_20px_rgba(0,219,233,0.15)]"
   >
     <nav class="page-container flex items-center justify-between py-4">
       <a class="font-display text-display-lg-mobile font-bold tracking-tighter text-primary-fixed-dim" href="/">
@@ -35,7 +35,7 @@ const { openContact } = useContactModal()
         class="neon-glow-primary rounded-lg bg-primary-container px-6 py-2 font-bold text-on-primary transition-all hover:bg-primary-fixed-dim active:scale-95"
         @click="openContact"
       >
-        Contact Us
+        Nous contacter
       </button>
     </nav>
   </header>

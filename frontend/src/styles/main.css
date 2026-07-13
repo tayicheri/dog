@@ -32,13 +32,32 @@
 
 @layer base {
   html {
-    scroll-behavior: smooth;
+    scroll-behavior: auto;
+    overflow-x: clip;
+    overscroll-behavior-y: none;
   }
 
   html,
   body {
     @apply bg-background font-body text-on-surface antialiased;
-    overflow-x: hidden;
+  }
+
+  body {
+    overflow-x: clip;
+    overscroll-behavior-y: none;
+    touch-action: pan-y;
+  }
+
+  main {
+    overflow-anchor: none;
+  }
+
+  img {
+    overflow-anchor: none;
+  }
+
+  [id] {
+    scroll-margin-top: 6rem;
   }
 
   button:not(:disabled) {
@@ -66,13 +85,16 @@
     background: rgb(20 20 31 / 0.7);
     backdrop-filter: blur(12px);
     border: 1px solid rgb(255 255 255 / 0.1);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition:
+      border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .glass-card:hover {
-    border-color: #00dbe9;
-    box-shadow: 0 0 20px rgb(0 219 233 / 0.15);
-    transform: translateY(-4px);
+  @media (hover: hover) {
+    .glass-card:hover {
+      border-color: #00dbe9;
+      box-shadow: 0 0 20px rgb(0 219 233 / 0.15);
+    }
   }
 
   .neon-glow-primary {
@@ -168,7 +190,6 @@
     position: absolute;
     inset: 0;
     background: linear-gradient(to bottom, transparent, rgb(0 219 233 / 0.05), transparent);
-    animation: scanline 8s linear infinite;
     pointer-events: none;
   }
 

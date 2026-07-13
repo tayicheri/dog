@@ -1,11 +1,17 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { useHead } from '@unhead/vue'
 import { api, setAuthToken } from '@/api/client'
 import PortfolioItemModal from '@/components/admin/PortfolioItemModal.vue'
 import { useContent } from '@/composables/useContent'
 import type { PortfolioItem, SiteContent } from '@/types/content'
 
 const { content, fetchContent, setContent } = useContent()
+
+useHead({
+  title: 'Admin — D.O.G.',
+  meta: [{ name: 'robots', content: 'noindex, nofollow' }],
+})
 
 const token = ref<string | null>(
   typeof localStorage !== 'undefined' ? localStorage.getItem('dog_admin_token') : null,

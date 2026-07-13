@@ -1,49 +1,44 @@
 import { computed, type DeepReadonly, type Ref } from 'vue'
 import { useHead, useSeoMeta } from '@unhead/vue'
+import { defineLocalBusiness, useSchemaOrg } from '@unhead/schema-org/vue'
 import type { SiteContent } from '@/types/content'
 
 const siteUrl = import.meta.env.VITE_SITE_URL ?? 'http://localhost:5173'
 
-const defaultTitle = "D.O.G. Dépann' Ordi Game | High-Performance Tech"
+const defaultTitle = "D.O.G. Dépann' Ordi Game | Tech haute performance"
 const defaultDescription =
-  'Conception de setups gaming extrêmes, watercooling custom et réparation hardware de précision.'
+  'Conception de setups gaming extrêmes, watercooling sur mesure et réparation matérielle de précision.'
+const defaultKeywords =
+  'dépannage PC, gaming, watercooling, réparation GPU, setup gaming, overclocking'
 
-type ContentRef = Ref<SiteContent | DeepReadonly<SiteContent> | null | undefined>
+const ogImageUrl = `${siteUrl}/og-image.jpg`
+
+const defaultOpeningHours = [
+  {
+    '@type': 'OpeningHoursSpecification' as const,
+    dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'] as const,
+    opens: '09:00',
+    closes: '18:00',
+  },
+  {
+    '@type': 'OpeningHoursSpecification' as const,
+    dayOfWeek: 'Saturday' as const,
+    opens: '09:00',
+    closes: '12:00',
+  },
+]
+
+type ContentRef = Ref<SiteContent | DeepReadonly<SiteContent> | undefined>
 
 export function useSiteSeo(content: ContentRef) {
   const title = computed(() => content.value?.seo.title ?? defaultTitle)
   const description = computed(() => content.value?.seo.description ?? defaultDescription)
+  const keywords = computed(() => content.value?.seo.keywords ?? defaultKeywords)
 
   useHead({
     htmlAttrs: { lang: 'fr' },
     link: [{ rel: 'canonical', href: siteUrl }],
-    script: computed(() => {
-      const business = content.value?.business
-      if (!business) return []
-
-      return [
-        {
-          key: 'local-business-schema',
-          type: 'application/ld+json',
-          innerHTML: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'LocalBusiness',
-            name: business.name,
-            description: description.value,
-            url: siteUrl,
-            email: business.email,
-            telephone: business.phone,
-            address: {
-              '@type': 'PostalAddress',
-              streetAddress: business.address,
-              addressLocality: business.city,
-              addressCountry: 'FR',
-            },
-            openingHours: business.hours,
-          }),
-        },
-      ]
-    }),
+    meta: [{ name: 'keywords', content: keywords }],
   })
 
   useSeoMeta({
@@ -54,8 +49,39 @@ export function useSiteSeo(content: ContentRef) {
     ogType: 'website',
     ogLocale: 'fr_FR',
     ogUrl: siteUrl,
+    ogImage: ogImageUrl,
     twitterCard: 'summary_large_image',
     twitterTitle: title,
     twitterDescription: description,
+    twitterImage: ogImageUrl,
   })
+
+  useSchemaOrg(
+    computed(() => {
+      const business = content.value?.business
+      const social = content.value?.sections.social
+      const sameAs = social
+        ? [social.youtubeUrl, social.tiktokUrl].filter((url): url is string => Boolean(url))
+        : []
+
+      return [
+        defineLocalBusiness({
+          name: business?.name ?? "D.O.G. Dépann' Ordi Game",
+          description: description.value,
+          url: siteUrl,
+          image: ogImageUrl,
+          email: business?.email ?? 'contact@dog-informatique.fr',
+          telephone: business?.phone ?? '',
+          address: {
+            '@type': 'PostalAddress',
+            streetAddress: business?.address ?? '',
+            addressLocality: business?.city ?? '',
+            addressCountry: 'FR',
+          },
+          sameAs,
+          openingHoursSpecification: defaultOpeningHours,
+        }),
+      ]
+    }),
+  )
 }

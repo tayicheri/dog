@@ -11,7 +11,7 @@ import PortfolioSection from '@/components/sections/PortfolioSection.vue'
 import SocialSection from '@/components/sections/SocialSection.vue'
 import ContactSection from '@/components/sections/ContactSection.vue'
 
-const { content, error, fetchContent } = useContent()
+const { content, fetchContent } = useContent()
 
 useSiteSeo(content)
 
@@ -21,23 +21,14 @@ onMounted(() => {
 </script>
 
 <template>
-  <div
-    v-if="!content"
-    class="flex min-h-screen flex-col items-center justify-center gap-3 text-on-surface-variant"
-  >
-    <p>Chargement…</p>
-    <p v-if="error" class="text-sm text-red-400">{{ error }}</p>
-  </div>
-  <template v-else>
-    <AppHeader />
-    <main class="scanline cyber-grid relative min-h-screen pt-24">
-      <HeroSection />
-      <ExpertiseSection />
-      <PortfolioSection />
-      <SocialSection />
-      <ContactSection />
-    </main>
-    <AppFooter />
-    <ContactModal />
-  </template>
+  <AppHeader />
+  <main class="scanline cyber-grid relative min-h-screen pt-24">
+    <HeroSection />
+    <ExpertiseSection />
+    <PortfolioSection />
+    <SocialSection />
+    <ContactSection />
+  </main>
+  <AppFooter />
+  <ContactModal />
 </template>

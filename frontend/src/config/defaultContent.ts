@@ -1,5 +1,6 @@
-import type { SiteContent } from '../types.js'
+import type { SiteContent } from '@/types/content'
 
+/** Contenu par défaut — aligné sur backend/src/services/defaults.ts */
 export function defaultSiteContent(): SiteContent {
   return {
     seo: {

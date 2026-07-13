@@ -28,13 +28,13 @@ const iconColors = ['text-primary-fixed-dim', 'text-secondary-fixed-dim', 'text-
           </div>
           <div class="mt-8 flex gap-4">
             <div class="flex flex-1 flex-col gap-2">
-              <div class="text-label-caps text-on-surface-variant">HW DIAGNOSTICS</div>
+              <div class="text-label-caps text-on-surface-variant">DIAGNOSTIC MATÉRIEL</div>
               <div class="segmented-progress">
                 <div v-for="n in 5" :key="n" class="segmented-segment" :class="{ active: n <= 4 }"></div>
               </div>
             </div>
             <div class="flex flex-1 flex-col gap-2">
-              <div class="text-label-caps text-on-surface-variant">FPS OPTIMIZATION</div>
+              <div class="text-label-caps text-on-surface-variant">OPTIMISATION FPS</div>
               <div class="segmented-progress">
                 <div v-for="n in 5" :key="n" class="segmented-segment active"></div>
               </div>

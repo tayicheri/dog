@@ -50,8 +50,10 @@ const image = computed(() => hero.value?.image || heroDefaultImage)
           <div class="absolute -inset-4 rounded-full bg-primary-fixed-dim/10 blur-3xl"></div>
           <img
             :src="image"
-            alt="Setup gaming D.O.G."
-            class="h-full w-full rounded-xl object-cover grayscale transition-all duration-700 hover:grayscale-0"
+            alt="Station gaming D.O.G."
+            decoding="async"
+            fetchpriority="high"
+            class="h-full w-full rounded-xl object-cover grayscale transition-[filter] duration-700 hover:grayscale-0"
           />
           <div v-if="hero?.imageTag" class="id-tag">{{ hero.imageTag }}</div>
         </div>
