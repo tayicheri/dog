@@ -1,34 +1,64 @@
 <script setup lang="ts">
-import { reactive, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { api } from '@/api/client'
+import { heroDefaultImage } from '@/config/brand'
 import { useContactModal } from '@/composables/useContactModal'
-import { useContent } from '@/composables/useContent'
 
 const { isOpen, closeContact } = useContactModal()
-const { content } = useContent()
+
+const missionLabels: Record<string, string> = {
+  reparation: 'Réparation Matérielle',
+  montage: 'Montage PC Custom',
+  optimisation: 'Optimisation logicielle / Tuning',
+  autre: 'Autre Requête',
+}
 
 const form = reactive({
   name: '',
   email: '',
-  phone: '',
+  missionType: 'reparation',
   message: '',
 })
 const status = ref<'idle' | 'sending' | 'ok' | 'error'>('idle')
+const closing = ref(false)
+
+const statusLine = computed(() => {
+  if (status.value === 'sending') return 'TRANSMISSION EN COURS…'
+  if (status.value === 'ok') return 'SIGNAL REÇU — MERCI POUR VOTRE MESSAGE'
+  if (status.value === 'error') return 'ÉCHEC DE TRANSMISSION — RÉESSAYEZ'
+  return 'SYSTÈME OPÉRATIONNEL - PRÊT À RECEVOIR'
+})
 
 watch(isOpen, (open) => {
-  if (!open) {
+  if (open) {
+    closing.value = false
     status.value = 'idle'
   }
 })
 
+function handleClose() {
+  closing.value = true
+  window.setTimeout(() => {
+    closeContact()
+    closing.value = false
+  }, 200)
+}
+
 async function submit() {
   status.value = 'sending'
+  const mission = missionLabels[form.missionType] ?? form.missionType
+  const payload = {
+    name: form.name,
+    email: form.email,
+    message: `Type de mission : ${mission}\n\n${form.message}`,
+  }
+
   try {
-    await api.post('/contact', form)
+    await api.post('/contact', payload)
     status.value = 'ok'
     form.name = ''
     form.email = ''
-    form.phone = ''
+    form.missionType = 'reparation'
     form.message = ''
   } catch {
     status.value = 'error'
@@ -40,80 +70,159 @@ async function submit() {
   <Teleport to="body">
     <div
       v-if="isOpen"
-      class="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
-      @click.self="closeContact"
+      class="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto p-margin-mobile md:p-margin-desktop"
     >
+      <!-- Fond flouté (Stitch) -->
+      <div class="fixed inset-0 z-0" @click="handleClose">
+        <div class="absolute inset-0 z-10 bg-surface/60 backdrop-blur-sm" />
+        <img
+          :src="heroDefaultImage"
+          alt=""
+          class="h-full w-full object-cover blur-md grayscale-[20%]"
+        />
+      </div>
+
       <div
-        class="glass-card neon-glow-primary relative w-full max-w-lg rounded-2xl border-2 border-primary-fixed-dim/30 p-8"
+        class="glass-panel neon-border-glow relative z-10 w-full max-w-2xl overflow-hidden rounded-xl transition-all duration-300"
+        :class="closing ? 'scale-95 opacity-0' : 'scale-100 opacity-100'"
         role="dialog"
         aria-modal="true"
         aria-labelledby="contact-modal-title"
+        @click.stop
       >
         <button
           type="button"
-          class="absolute top-4 right-4 text-on-surface-variant transition-colors hover:text-primary-fixed-dim"
+          class="group absolute top-6 right-6 z-20 p-2 text-on-surface-variant transition-colors hover:text-primary-container"
           aria-label="Fermer"
-          @click="closeContact"
+          @click="handleClose"
         >
-          <span class="material-symbols-outlined">close</span>
+          <span class="material-symbols-outlined text-3xl transition-transform duration-300 group-hover:rotate-90">
+            close
+          </span>
         </button>
 
-        <span class="text-label-caps mb-2 block text-tertiary-fixed-dim">// CONTACT PROTOCOL</span>
-        <h2 id="contact-modal-title" class="text-headline-md mb-2 text-primary-fixed-dim">Contact Us</h2>
-        <p class="mb-6 text-body-sm text-on-surface-variant">
-          {{ content?.business.name }} — {{ content?.business.city }}
-        </p>
+        <div class="absolute top-6 left-6 font-body text-sm text-primary-container opacity-40 select-none">
+          [REF-CONTACT-082]
+        </div>
 
-        <form class="space-y-4" @submit.prevent="submit">
-          <label class="block text-sm">
-            <span class="text-label-caps text-on-surface-variant">Nom</span>
-            <input
-              v-model="form.name"
-              class="mt-1 w-full border-b-2 border-outline-variant bg-black/50 px-3 py-2 text-on-surface outline-none focus:border-primary-fixed-dim"
-              required
-            />
-          </label>
-          <label class="block text-sm">
-            <span class="text-label-caps text-on-surface-variant">Email</span>
-            <input
-              v-model="form.email"
-              type="email"
-              class="mt-1 w-full border-b-2 border-outline-variant bg-black/50 px-3 py-2 text-on-surface outline-none focus:border-primary-fixed-dim"
-              required
-            />
-          </label>
-          <label class="block text-sm">
-            <span class="text-label-caps text-on-surface-variant">Téléphone</span>
-            <input
-              v-model="form.phone"
-              class="mt-1 w-full border-b-2 border-outline-variant bg-black/50 px-3 py-2 text-on-surface outline-none focus:border-primary-fixed-dim"
-            />
-          </label>
-          <label class="block text-sm">
-            <span class="text-label-caps text-on-surface-variant">Message</span>
-            <textarea
-              v-model="form.message"
-              class="mt-1 w-full border-b-2 border-outline-variant bg-black/50 px-3 py-2 text-on-surface outline-none focus:border-primary-fixed-dim"
-              rows="4"
-              required
-              minlength="10"
-            />
-          </label>
+        <div class="px-8 pt-16 pb-12">
+          <div class="mb-10 text-center">
+            <h2 id="contact-modal-title" class="text-headline-md mb-2 tracking-tight text-primary">
+              LANCER UN DIAGNOSTIC
+            </h2>
+            <p class="text-body-sm mx-auto max-w-md text-on-surface-variant">
+              Précisez votre mission. Un technicien D.O.G. analysera vos fréquences sous 24h.
+            </p>
+            <div class="modal-segmented-progress mt-6 flex justify-center">
+              <span class="active" />
+              <span class="active" />
+              <span class="active" />
+              <span class="active animate-pulse-cyan" />
+              <span />
+            </div>
+          </div>
 
-          <button
-            type="submit"
-            class="neon-glow-primary w-full rounded-lg bg-primary-fixed-dim py-3 font-bold text-on-primary-fixed transition-all hover:bg-primary-container disabled:opacity-50"
-            :disabled="status === 'sending'"
-          >
-            {{ status === 'sending' ? 'ENVOI…' : 'ENVOYER' }}
-          </button>
-        </form>
+          <form class="space-y-8" @submit.prevent="submit">
+            <div class="grid grid-cols-1 gap-gutter md:grid-cols-2">
+              <div class="flex flex-col gap-2">
+                <label class="text-label-caps text-on-surface-variant" for="contact-name">Nom / Pseudo</label>
+                <input
+                  id="contact-name"
+                  v-model="form.name"
+                  class="cyber-input focus:ring-0"
+                  placeholder="Gamer_Alpha"
+                  type="text"
+                  required
+                />
+              </div>
+              <div class="flex flex-col gap-2">
+                <label class="text-label-caps text-on-surface-variant" for="contact-email">
+                  Canal de Transmission (Email)
+                </label>
+                <input
+                  id="contact-email"
+                  v-model="form.email"
+                  class="cyber-input focus:ring-0"
+                  placeholder="contact@matrix.com"
+                  type="email"
+                  required
+                />
+              </div>
+            </div>
 
-        <p v-if="status === 'ok'" class="mt-4 text-center text-sm text-primary-fixed-dim">Message envoyé — merci !</p>
-        <p v-if="status === 'error'" class="mt-4 text-center text-sm text-red-400">
-          Erreur lors de l'envoi. Réessayez ou appelez-nous.
-        </p>
+            <div class="relative flex flex-col gap-2">
+              <label class="text-label-caps text-on-surface-variant" for="contact-mission">Type de Mission</label>
+              <select
+                id="contact-mission"
+                v-model="form.missionType"
+                class="cyber-input cursor-pointer appearance-none focus:ring-0"
+              >
+                <option class="bg-surface text-on-surface" value="reparation">Réparation Matérielle</option>
+                <option class="bg-surface text-on-surface" value="montage">Montage PC Custom</option>
+                <option class="bg-surface text-on-surface" value="optimisation">
+                  Optimisation logicielle / Tuning
+                </option>
+                <option class="bg-surface text-on-surface" value="autre">Autre Requête</option>
+              </select>
+              <span
+                class="material-symbols-outlined pointer-events-none absolute right-0 bottom-3 text-primary-container"
+              >
+                expand_more
+              </span>
+            </div>
+
+            <div class="flex flex-col gap-2">
+              <label class="text-label-caps text-on-surface-variant" for="contact-message">
+                Détails de l'Anomalie
+              </label>
+              <textarea
+                id="contact-message"
+                v-model="form.message"
+                class="cyber-input resize-none focus:ring-0"
+                placeholder="Décrivez les symptômes de votre machine ou votre projet de build..."
+                rows="4"
+                required
+                minlength="10"
+              />
+            </div>
+
+            <div class="flex flex-col items-center gap-4 pt-4">
+              <button
+                type="submit"
+                class="group flex w-full items-center justify-center gap-2 rounded-none bg-primary-container px-12 py-4 font-display text-base font-bold text-black transition-all duration-300 hover:bg-primary-container/90 hover:shadow-[0_0_20px_rgba(0,240,255,0.4)] active:scale-95 disabled:opacity-50 md:w-auto"
+                :disabled="status === 'sending'"
+              >
+                <span>{{ status === 'sending' ? 'ENVOI EN COURS…' : 'ENVOYER LE SIGNAL' }}</span>
+                <span class="material-symbols-outlined transition-transform group-hover:translate-x-1">send</span>
+              </button>
+              <p
+                class="text-body-sm flex items-center gap-2"
+                :class="
+                  status === 'ok'
+                    ? 'text-primary-container'
+                    : status === 'error'
+                      ? 'text-red-400'
+                      : 'text-on-surface-variant/60'
+                "
+              >
+                <span
+                  class="material-symbols-outlined text-sm"
+                  :class="status === 'idle' ? 'animate-pulse text-tertiary-fixed-dim' : ''"
+                >
+                  radio_button_checked
+                </span>
+                {{ statusLine }}
+              </p>
+            </div>
+          </form>
+        </div>
+
+        <div class="h-1 w-full bg-gradient-to-r from-transparent via-primary-container to-transparent opacity-30" />
       </div>
+
+      <div
+        class="pointer-events-none fixed bottom-0 left-0 z-0 h-1/3 w-full bg-gradient-to-t from-primary-container/5 to-transparent"
+      />
     </div>
   </Teleport>
 </template>

@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { api, setAuthToken } from '@/api/client'
+import PortfolioItemModal from '@/components/admin/PortfolioItemModal.vue'
 import { useContent } from '@/composables/useContent'
-import type { SiteContent } from '@/types/content'
+import type { PortfolioItem, SiteContent } from '@/types/content'
 
 const { content, fetchContent, setContent } = useContent()
 
@@ -17,7 +18,24 @@ const passwordForm = reactive({ currentPassword: '', newPassword: '' })
 
 const draft = ref<SiteContent | null>(null)
 
+const portfolioModalOpen = ref(false)
+const portfolioModalMode = ref<'add' | 'edit'>('add')
+const portfolioEditingIndex = ref<number | null>(null)
+const portfolioModalItem = ref<PortfolioItem>(emptyPortfolioItem())
+
 const isLoggedIn = computed(() => Boolean(token.value))
+
+function emptyPortfolioItem(): PortfolioItem {
+  return {
+    title: '',
+    description: '',
+    image: '',
+    tag: '',
+    badge: '',
+    badgeStyle: 'premium',
+    buttonLabel: 'Détails',
+  }
+}
 
 onMounted(async () => {
   await fetchContent()
@@ -61,10 +79,8 @@ async function save() {
   }
 }
 
-async function uploadImage(event: Event, target: 'hero' | 'about') {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0]
-  if (!file || !draft.value || !token.value) return
+async function uploadFile(file: File): Promise<string | null> {
+  if (!token.value) return null
 
   const form = new FormData()
   form.append('file', file)
@@ -72,11 +88,23 @@ async function uploadImage(event: Event, target: 'hero' | 'about') {
     const { data } = await api.post<{ url: string }>('/admin/upload', form, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
-    if (target === 'hero') draft.value.sections.hero.image = data.url
-    else draft.value.sections.about.image = data.url
+    return data.url
   } catch {
     saveMessage.value = "Erreur lors de l'upload."
+    return null
   }
+}
+
+async function uploadImage(event: Event, target: 'hero' | 'about') {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file || !draft.value) return
+
+  const url = await uploadFile(file)
+  if (!url) return
+
+  if (target === 'hero') draft.value.sections.hero.image = url
+  else draft.value.sections.about.image = url
 }
 
 async function changePassword() {
@@ -101,6 +129,43 @@ function addService() {
 
 function removeService(index: number) {
   draft.value?.sections.services.splice(index, 1)
+}
+
+function openPortfolioAdd() {
+  portfolioModalMode.value = 'add'
+  portfolioEditingIndex.value = null
+  portfolioModalItem.value = emptyPortfolioItem()
+  portfolioModalOpen.value = true
+}
+
+function openPortfolioEdit(index: number) {
+  if (!draft.value) return
+  portfolioModalMode.value = 'edit'
+  portfolioEditingIndex.value = index
+  portfolioModalItem.value = JSON.parse(JSON.stringify(draft.value.sections.portfolio[index])) as PortfolioItem
+  portfolioModalOpen.value = true
+}
+
+function closePortfolioModal() {
+  portfolioModalOpen.value = false
+}
+
+function savePortfolioItem(item: PortfolioItem) {
+  if (!draft.value) return
+
+  if (portfolioModalMode.value === 'add') {
+    draft.value.sections.portfolio.push(item)
+  } else if (portfolioEditingIndex.value !== null) {
+    draft.value.sections.portfolio[portfolioEditingIndex.value] = item
+  }
+
+  portfolioModalOpen.value = false
+}
+
+function removePortfolio(index: number) {
+  if (!draft.value) return
+  if (!confirm('Supprimer cette entrée du portfolio ?')) return
+  draft.value.sections.portfolio.splice(index, 1)
 }
 </script>
 
@@ -315,29 +380,48 @@ function removeService(index: number) {
 
         <fieldset class="rounded-xl border border-border bg-surface-elevated p-6">
           <legend class="px-2 font-display text-lg font-semibold">Portfolio</legend>
-          <div class="mt-4 space-y-6">
+          <div class="mt-4 space-y-4">
             <div
               v-for="(item, index) in draft.sections.portfolio"
               :key="index"
-              class="rounded-lg border border-border p-4"
+              class="flex flex-wrap items-center gap-4 rounded-lg border border-border p-4"
             >
-              <input v-model="item.title" class="mb-2 w-full rounded-lg border border-border px-3 py-2" placeholder="Titre" />
-              <textarea
-                v-model="item.description"
-                class="mb-2 w-full rounded-lg border border-border px-3 py-2"
-                rows="2"
-                placeholder="Description"
+              <img
+                v-if="item.image"
+                :src="item.image"
+                :alt="item.title"
+                class="h-14 w-14 shrink-0 rounded-lg border border-border object-cover"
               />
-              <input v-model="item.image" class="mb-2 w-full rounded-lg border border-border px-3 py-2" placeholder="URL image" />
-              <input v-model="item.tag" class="mb-2 w-full rounded-lg border border-border px-3 py-2" placeholder="Tag" />
-              <input v-model="item.badge" class="mb-2 w-full rounded-lg border border-border px-3 py-2" placeholder="Badge" />
-              <select v-model="item.badgeStyle" class="mb-2 w-full rounded-lg border border-border px-3 py-2">
-                <option value="premium">premium</option>
-                <option value="fixed">fixed</option>
-                <option value="pro">pro</option>
-              </select>
-              <input v-model="item.buttonLabel" class="w-full rounded-lg border border-border px-3 py-2" placeholder="Bouton" />
+              <div
+                v-else
+                class="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-dashed border-border text-xs text-muted"
+              >
+                —
+              </div>
+              <div class="min-w-0 flex-1">
+                <p class="truncate font-medium">{{ item.title || 'Sans titre' }}</p>
+                <p class="truncate text-xs text-muted">{{ item.badge }} · {{ item.tag }}</p>
+              </div>
+              <div class="flex gap-2">
+                <button
+                  class="rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-surface"
+                  type="button"
+                  @click="openPortfolioEdit(index)"
+                >
+                  Modifier
+                </button>
+                <button
+                  class="text-sm text-red-600 hover:underline"
+                  type="button"
+                  @click="removePortfolio(index)"
+                >
+                  Supprimer
+                </button>
+              </div>
             </div>
+            <button class="text-sm text-primary hover:underline" type="button" @click="openPortfolioAdd">
+              + Ajouter une entrée
+            </button>
           </div>
         </fieldset>
 
@@ -393,6 +477,15 @@ function removeService(index: number) {
           </form>
         </fieldset>
       </section>
+
+      <PortfolioItemModal
+        :open="portfolioModalOpen"
+        :mode="portfolioModalMode"
+        :initial-item="portfolioModalItem"
+        :upload-file="uploadFile"
+        @close="closePortfolioModal"
+        @save="savePortfolioItem"
+      />
     </main>
   </div>
 </template>

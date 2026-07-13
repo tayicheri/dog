@@ -14,6 +14,7 @@
   --color-on-surface: #e4e1e9;
   --color-on-surface-variant: #b9cacb;
   --color-outline-variant: #3b494b;
+  --color-primary: #dbfcff;
   --color-primary-fixed-dim: #00dbe9;
   --color-primary-container: #00f0ff;
   --color-on-primary-fixed: #002022;
@@ -38,6 +39,14 @@
   body {
     @apply bg-background font-body text-on-surface antialiased;
     overflow-x: hidden;
+  }
+
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
   }
 }
 
@@ -72,6 +81,55 @@
 
   .neon-glow-secondary {
     box-shadow: 0 0 15px rgb(182 0 248 / 0.4);
+  }
+
+  .glass-panel {
+    background: rgb(20 20 31 / 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgb(255 255 255 / 0.1);
+  }
+
+  .neon-border-glow {
+    box-shadow:
+      0 0 15px rgb(0 240 255 / 0.15),
+      inset 0 0 5px rgb(0 240 255 / 0.05);
+    border: 1px solid rgb(0 240 255 / 0.3);
+  }
+
+  .cyber-input {
+    @apply w-full border-0 border-b-2 border-outline-variant/30 bg-black px-0 py-3 text-primary outline-none transition-all;
+  }
+
+  .cyber-input:focus {
+    border-bottom-color: var(--color-primary-container);
+    box-shadow: 0 4px 10px -4px rgb(0 240 255 / 0.4);
+  }
+
+  .modal-segmented-progress span {
+    display: inline-block;
+    width: 12px;
+    height: 4px;
+    margin-right: 4px;
+    background: rgb(0 240 255 / 0.2);
+  }
+
+  .modal-segmented-progress span.active {
+    background: var(--color-primary-container);
+    box-shadow: 0 0 8px var(--color-primary-container);
+  }
+
+  .animate-pulse-cyan {
+    animation: pulse-cyan 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse-cyan {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.6;
+    }
   }
 
   .segmented-progress {
