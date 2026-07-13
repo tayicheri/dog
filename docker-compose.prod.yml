@@ -1,7 +1,7 @@
 # PRODUCTION UNIQUEMENT — ne pas fusionner avec docker-compose.yml
 # Usage : docker compose -f docker-compose.prod.yml up -d --build
 # Ou : ./scripts/docker-prod.sh
-# Prérequis : .env (VITE_*, CADDY_*), backend/.env
+# Prérequis : .env (VITE_*, CADDY_*), backend/.env, réseau Docker externe caddy_net (Caddy global sur le serveur)
 
 services:
   api:
@@ -12,6 +12,7 @@ services:
     env_file:
       - backend/.env
     environment:
+      NODE_ENV: production
       DATA_DIR: /app/data
       UPLOADS_DIR: /app/uploads
       CORS_ORIGIN: ${VITE_SITE_URL:?définir VITE_SITE_URL dans .env}
@@ -54,42 +55,19 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    networks:
-      - caddy_net
-
-  caddy:
-    image: caddy:2-alpine
-    container_name: dog-caddy
-    restart: always
-    ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
-    environment:
-      CADDY_DOMAIN: ${CADDY_DOMAIN:?définir CADDY_DOMAIN dans .env}
-      CADDY_ACME_EMAIL: ${CADDY_ACME_EMAIL:-}
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - dog-caddy-data:/data
-      - dog-caddy-config:/config
-    depends_on:
-      - web
-      - api
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     networks:
       - caddy_net
 
 networks:
   caddy_net:
-    name: dog_caddy_net
-    driver: bridge
+    external: true
 
 volumes:
   dog-data:
   dog-uploads:
-  dog-caddy-data:
-  dog-caddy-config:

@@ -3,7 +3,7 @@ import path from 'node:path'
 import bcrypt from 'bcryptjs'
 import { env } from '../config/env.js'
 import { defaultSiteContent } from './defaults.js'
-import type { AuthData, SiteContent } from '../types.js'
+import type { AuthData, SiteContent, SmtpConfig } from '../types.js'
 
 async function ensureDir(dir: string) {
   await fs.mkdir(dir, { recursive: true })
@@ -15,6 +15,10 @@ function sitePath() {
 
 function authPath() {
   return path.join(env.dataDir, 'auth.json')
+}
+
+function smtpPath() {
+  return path.join(env.dataDir, 'smtp.json')
 }
 
 export async function bootstrap() {
@@ -66,9 +70,10 @@ export async function readSiteContent(): Promise<SiteContent> {
 }
 
 export async function writeSiteContent(content: SiteContent): Promise<void> {
-  const tmp = `${sitePath()}.tmp`
+  const target = sitePath()
+  const tmp = `${target}.tmp`
   await fs.writeFile(tmp, JSON.stringify(content, null, 2), 'utf-8')
-  await fs.rename(tmp, sitePath())
+  await fs.rename(tmp, target)
 }
 
 export async function readAuth(): Promise<AuthData> {
@@ -80,4 +85,20 @@ export async function writeAuth(auth: AuthData): Promise<void> {
   const tmp = `${authPath()}.tmp`
   await fs.writeFile(tmp, JSON.stringify(auth, null, 2), 'utf-8')
   await fs.rename(tmp, authPath())
+}
+
+export async function readSmtpConfig(): Promise<SmtpConfig | null> {
+  try {
+    const raw = await fs.readFile(smtpPath(), 'utf-8')
+    return JSON.parse(raw) as SmtpConfig
+  } catch {
+    return null
+  }
+}
+
+export async function writeSmtpConfig(config: SmtpConfig): Promise<void> {
+  const target = smtpPath()
+  const tmp = `${target}.tmp`
+  await fs.writeFile(tmp, JSON.stringify(config, null, 2), 'utf-8')
+  await fs.rename(tmp, target)
 }

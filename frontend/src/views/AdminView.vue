@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { api, setAuthToken } from '@/api/client'
 import PortfolioItemModal from '@/components/admin/PortfolioItemModal.vue'
 import { useContent } from '@/composables/useContent'
@@ -14,9 +14,13 @@ const loginForm = reactive({ username: '', password: '' })
 const loginError = ref('')
 const saving = ref(false)
 const saveMessage = ref('')
+const saveDetails = ref<unknown | null>(null)
 const passwordForm = reactive({ currentPassword: '', newPassword: '' })
+const smtpForm = reactive({ email: '', password: '' })
+const smtpConfigured = ref(false)
 
 const draft = ref<SiteContent | null>(null)
+const lastSaved = ref<SiteContent | null>(null)
 
 const portfolioModalOpen = ref(false)
 const portfolioModalMode = ref<'add' | 'edit'>('add')
@@ -24,6 +28,22 @@ const portfolioEditingIndex = ref<number | null>(null)
 const portfolioModalItem = ref<PortfolioItem>(emptyPortfolioItem())
 
 const isLoggedIn = computed(() => Boolean(token.value))
+const isDirty = computed(() => {
+  if (!draft.value || !lastSaved.value) return false
+  return stableStringify(draft.value) !== stableStringify(lastSaved.value)
+})
+
+function stableStringify(value: unknown): string {
+  if (value === null) return 'null'
+  const t = typeof value
+  if (t === 'string') return JSON.stringify(value)
+  if (t === 'number' || t === 'boolean') return String(value)
+  if (Array.isArray(value)) return `[${value.map(stableStringify).join(',')}]`
+  if (t !== 'object') return JSON.stringify(value)
+  const obj = value as Record<string, unknown>
+  const keys = Object.keys(obj).sort()
+  return `{${keys.map((k) => `${JSON.stringify(k)}:${stableStringify(obj[k])}`).join(',')}}`
+}
 
 function emptyPortfolioItem(): PortfolioItem {
   return {
@@ -41,9 +61,33 @@ onMounted(async () => {
   await fetchContent()
   if (content.value) {
     draft.value = JSON.parse(JSON.stringify(content.value)) as SiteContent
+    lastSaved.value = JSON.parse(JSON.stringify(content.value)) as SiteContent
   }
-  if (token.value) setAuthToken(token.value)
+  if (token.value) {
+    setAuthToken(token.value)
+    await fetchSmtpConfig()
+  }
 })
+
+watch(isDirty, (dirty) => {
+  if (!dirty) return
+  saveMessage.value = ''
+  saveDetails.value = null
+})
+
+function confirmIfDirty(): boolean {
+  if (!isDirty.value) return true
+  return confirm('Modifications non enregistrées. Continuer sans sauvegarder ?')
+}
+
+function onBeforeUnload(e: BeforeUnloadEvent) {
+  if (!isDirty.value) return
+  e.preventDefault()
+  e.returnValue = ''
+}
+
+onMounted(() => window.addEventListener('beforeunload', onBeforeUnload))
+onUnmounted(() => window.removeEventListener('beforeunload', onBeforeUnload))
 
 async function login() {
   loginError.value = ''
@@ -53,12 +97,14 @@ async function login() {
     localStorage.setItem('dog_admin_token', data.token)
     setAuthToken(data.token)
     loginForm.password = ''
+    await fetchSmtpConfig()
   } catch {
     loginError.value = 'Identifiants incorrects'
   }
 }
 
 function logout() {
+  if (!confirmIfDirty()) return
   token.value = null
   localStorage.removeItem('dog_admin_token')
   setAuthToken(null)
@@ -68,11 +114,15 @@ async function save() {
   if (!draft.value) return
   saving.value = true
   saveMessage.value = ''
+  saveDetails.value = null
   try {
     await api.put('/admin/content', draft.value)
     setContent(draft.value)
+    lastSaved.value = JSON.parse(JSON.stringify(draft.value)) as SiteContent
     saveMessage.value = 'Contenu enregistré.'
-  } catch {
+  } catch (err: unknown) {
+    const axiosErr = err as { response?: { status?: number; data?: unknown } }
+    saveDetails.value = axiosErr.response?.data ?? null
     saveMessage.value = 'Erreur lors de la sauvegarde.'
   } finally {
     saving.value = false
@@ -82,6 +132,7 @@ async function save() {
 async function uploadFile(file: File): Promise<string | null> {
   if (!token.value) return null
 
+  saveDetails.value = null
   const form = new FormData()
   form.append('file', file)
   try {
@@ -89,7 +140,9 @@ async function uploadFile(file: File): Promise<string | null> {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
     return data.url
-  } catch {
+  } catch (err: unknown) {
+    const axiosErr = err as { response?: { status?: number; data?: unknown } }
+    saveDetails.value = axiosErr.response?.data ?? null
     saveMessage.value = "Erreur lors de l'upload."
     return null
   }
@@ -115,6 +168,34 @@ async function changePassword() {
     saveMessage.value = 'Mot de passe mis à jour.'
   } catch {
     saveMessage.value = 'Mot de passe actuel incorrect.'
+  }
+}
+
+async function fetchSmtpConfig() {
+  try {
+    const { data } = await api.get<{ email: string; configured: boolean }>('/admin/smtp')
+    smtpForm.email = data.email
+    smtpConfigured.value = data.configured
+  } catch {
+    smtpConfigured.value = false
+  }
+}
+
+async function saveSmtpConfig() {
+  saveMessage.value = ''
+  saveDetails.value = null
+  try {
+    await api.put('/admin/smtp', {
+      email: smtpForm.email,
+      password: smtpForm.password || undefined,
+    })
+    smtpConfigured.value = true
+    smtpForm.password = ''
+    saveMessage.value = 'Configuration email enregistrée.'
+  } catch (err: unknown) {
+    const axiosErr = err as { response?: { status?: number; data?: unknown } }
+    saveDetails.value = axiosErr.response?.data ?? null
+    saveMessage.value = 'Configuration email invalide. Vérifiez l\'adresse Gmail et le mot de passe d\'application.'
   }
 }
 
@@ -212,7 +293,13 @@ function removePortfolio(index: number) {
 
       <section v-else-if="draft" class="space-y-10">
         <div class="flex flex-wrap items-center justify-between gap-4">
-          <p v-if="saveMessage" class="text-sm text-secondary-dark">{{ saveMessage }}</p>
+          <div class="space-y-1">
+            <p v-if="saveMessage" class="text-sm text-secondary-dark">{{ saveMessage }}</p>
+            <details v-if="saveDetails" class="max-w-[60ch] text-xs text-muted">
+              <summary class="cursor-pointer select-none">Détails</summary>
+              <pre class="mt-2 overflow-x-auto whitespace-pre-wrap rounded-lg border border-border bg-surface p-3">{{ saveDetails }}</pre>
+            </details>
+          </div>
           <div class="flex gap-3">
             <button
               class="rounded-lg border border-border px-4 py-2 text-sm hover:bg-surface"
@@ -224,11 +311,17 @@ function removePortfolio(index: number) {
             <button
               class="rounded-lg bg-secondary px-4 py-2 text-sm font-semibold text-white hover:bg-secondary-dark disabled:opacity-50"
               type="button"
-              :disabled="saving"
+              :disabled="saving || !isDirty"
               @click="save"
             >
               {{ saving ? 'Enregistrement…' : 'Enregistrer' }}
             </button>
+            <span
+              v-if="isDirty"
+              class="self-center rounded-full border border-border bg-surface px-3 py-1 text-xs text-muted"
+            >
+              Modifications non enregistrées
+            </span>
           </div>
         </div>
 
@@ -448,6 +541,53 @@ function removePortfolio(index: number) {
             rows="2"
             placeholder="Intro"
           />
+        </fieldset>
+
+        <fieldset class="rounded-xl border border-border bg-surface-elevated p-6">
+          <legend class="px-2 font-display text-lg font-semibold">Configuration email (Gmail)</legend>
+          <div class="mt-4 space-y-4">
+            <div class="rounded-lg border border-border bg-surface p-4 text-sm text-muted">
+              <p class="mb-2">
+                L'adresse doit être un compte <strong class="text-on-surface">@gmail.com</strong>.
+                Utilisez un <strong class="text-on-surface">mot de passe d'application</strong> Google
+                (pas votre mot de passe de connexion).
+              </p>
+              <p>
+                Compte Google → Sécurité → Validation en 2 étapes → Mots de passe des applications.
+              </p>
+            </div>
+            <p class="text-sm" :class="smtpConfigured ? 'text-secondary-dark' : 'text-muted'">
+              {{ smtpConfigured ? 'Statut : configuré' : 'Statut : non configuré' }}
+            </p>
+            <form class="grid gap-4 md:grid-cols-2" @submit.prevent="saveSmtpConfig">
+              <label class="block text-sm">
+                Adresse Gmail
+                <input
+                  v-model="smtpForm.email"
+                  class="mt-1 w-full rounded-lg border border-border px-3 py-2"
+                  type="email"
+                  placeholder="moncompte@gmail.com"
+                  required
+                />
+              </label>
+              <label class="block text-sm">
+                Mot de passe d'application
+                <input
+                  v-model="smtpForm.password"
+                  class="mt-1 w-full rounded-lg border border-border px-3 py-2"
+                  type="password"
+                  :placeholder="smtpConfigured ? 'Laisser vide pour conserver l\'actuel' : 'Mot de passe d\'application'"
+                  :required="!smtpConfigured"
+                />
+              </label>
+              <button
+                class="rounded-lg border border-primary px-4 py-2 text-sm text-primary hover:bg-primary/5 md:col-span-2 md:w-fit"
+                type="submit"
+              >
+                Enregistrer la configuration email
+              </button>
+            </form>
+          </div>
         </fieldset>
 
         <fieldset class="rounded-xl border border-border bg-surface-elevated p-6">

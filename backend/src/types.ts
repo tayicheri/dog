@@ -78,6 +78,12 @@ export interface AuthData {
   passwordHash: string
 }
 
+export interface SmtpConfig {
+  email: string
+  password: string
+  updatedAt: string
+}
+
 export interface ContactPayload {
   name: string
   email: string

@@ -4,6 +4,7 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
   console.error(err)
   if (res.headersSent) return
 
-  const message = err instanceof Error ? err.message : 'Erreur interne'
+  const isProd = process.env.NODE_ENV === 'production'
+  const message = isProd ? 'Erreur interne' : err instanceof Error ? err.message : 'Erreur interne'
   res.status(500).json({ error: message })
 }

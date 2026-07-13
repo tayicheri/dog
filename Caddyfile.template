@@ -1,7 +1,7 @@
 # Snippet pour Caddy global (caddy-global) — importé via /etc/caddy/projects/dog.caddy
 # Généré par ./scripts/render-caddy-snippet.sh — ne pas éditer manuellement
 
-dog.tayi.pro {
+${CADDY_DOMAIN} {
 	handle /api/* {
 		reverse_proxy dog-api:8080
 	}
@@ -11,5 +11,5 @@ dog.tayi.pro {
 	handle {
 		reverse_proxy dog-web:80
 	}
-	tls taissirmohamed@gmail.com
+	tls ${CADDY_ACME_EMAIL}
 }

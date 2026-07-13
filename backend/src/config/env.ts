@@ -11,9 +11,11 @@ function required(name: string, fallback?: string): string {
   return value
 }
 
+const isProd = process.env.NODE_ENV === 'production'
+
 export const env = {
   port: Number(process.env.PORT ?? 8080),
-  jwtSecret: required('JWT_SECRET', 'dev-secret-change-me'),
+  jwtSecret: required('JWT_SECRET', isProd ? undefined : 'dev-secret-change-me'),
   adminUsername: process.env.ADMIN_USERNAME ?? 'admin',
   adminPassword: process.env.ADMIN_PASSWORD ?? 'changeme',
   dataDir: path.resolve(process.env.DATA_DIR ?? './data'),
@@ -27,4 +29,12 @@ export const env = {
     from: process.env.MAIL_FROM ?? 'noreply@example.com',
     to: process.env.MAIL_TO ?? 'contact@example.com',
   },
+}
+
+if (isProd && env.jwtSecret === 'dev-secret-change-me') {
+  throw new Error('JWT_SECRET invalide en production')
+}
+
+if (isProd && (!env.corsOrigin || env.corsOrigin === '*' || env.corsOrigin.includes(','))) {
+  throw new Error('CORS_ORIGIN invalide en production (doit être une seule origin explicite)')
 }

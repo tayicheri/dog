@@ -16,6 +16,7 @@ const missionLabels: Record<string, string> = {
 const form = reactive({
   name: '',
   email: '',
+  phone: '',
   missionType: 'reparation',
   message: '',
 })
@@ -36,6 +37,10 @@ watch(isOpen, (open) => {
   }
 })
 
+function retry() {
+  status.value = 'idle'
+}
+
 function handleClose() {
   closing.value = true
   window.setTimeout(() => {
@@ -50,6 +55,7 @@ async function submit() {
   const payload = {
     name: form.name,
     email: form.email,
+    phone: form.phone || undefined,
     message: `Type de mission : ${mission}\n\n${form.message}`,
   }
 
@@ -58,6 +64,7 @@ async function submit() {
     status.value = 'ok'
     form.name = ''
     form.email = ''
+    form.phone = ''
     form.missionType = 'reparation'
     form.message = ''
   } catch {
@@ -122,7 +129,7 @@ async function submit() {
             </div>
           </div>
 
-          <form class="space-y-8" @submit.prevent="submit">
+          <form v-if="status === 'idle' || status === 'sending'" class="space-y-8" @submit.prevent="submit">
             <div class="grid grid-cols-1 gap-gutter md:grid-cols-2">
               <div class="flex flex-col gap-2">
                 <label class="text-label-caps text-on-surface-variant" for="contact-name">Nom / Pseudo</label>
@@ -148,6 +155,18 @@ async function submit() {
                   required
                 />
               </div>
+            </div>
+
+            <div class="flex flex-col gap-2">
+              <label class="text-label-caps text-on-surface-variant" for="contact-phone">Téléphone</label>
+              <input
+                id="contact-phone"
+                v-model="form.phone"
+                class="cyber-input focus:ring-0"
+                placeholder="06 12 34 56 78"
+                type="tel"
+                autocomplete="tel"
+              />
             </div>
 
             <div class="relative flex flex-col gap-2">
@@ -195,16 +214,7 @@ async function submit() {
                 <span>{{ status === 'sending' ? 'ENVOI EN COURS…' : 'ENVOYER LE SIGNAL' }}</span>
                 <span class="material-symbols-outlined transition-transform group-hover:translate-x-1">send</span>
               </button>
-              <p
-                class="text-body-sm flex items-center gap-2"
-                :class="
-                  status === 'ok'
-                    ? 'text-primary-container'
-                    : status === 'error'
-                      ? 'text-red-400'
-                      : 'text-on-surface-variant/60'
-                "
-              >
+              <p class="text-body-sm flex items-center gap-2 text-on-surface-variant/60">
                 <span
                   class="material-symbols-outlined text-sm"
                   :class="status === 'idle' ? 'animate-pulse text-tertiary-fixed-dim' : ''"
@@ -215,6 +225,26 @@ async function submit() {
               </p>
             </div>
           </form>
+
+          <div v-else class="flex flex-col items-center gap-6 pt-4 text-center">
+            <p
+              class="text-body-sm flex items-center gap-2"
+              :class="status === 'ok' ? 'text-primary-container' : 'text-red-400'"
+            >
+              <span class="material-symbols-outlined text-sm">radio_button_checked</span>
+              {{ statusLine }}
+            </p>
+
+            <button
+              v-if="status === 'error'"
+              type="button"
+              class="group flex w-full items-center justify-center gap-2 rounded-none bg-primary-container px-12 py-4 font-display text-base font-bold text-black transition-all duration-300 hover:bg-primary-container/90 hover:shadow-[0_0_20px_rgba(0,240,255,0.4)] active:scale-95 md:w-auto"
+              @click="retry"
+            >
+              <span>RÉESSAYER</span>
+              <span class="material-symbols-outlined transition-transform group-hover:translate-x-1">refresh</span>
+            </button>
+          </div>
         </div>
 
         <div class="h-1 w-full bg-gradient-to-r from-transparent via-primary-container to-transparent opacity-30" />
